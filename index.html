@@ -19,16 +19,15 @@ h1{font-size:25px;line-height:1.12;margin:8px 0 9px;letter-spacing:-.03em}p{marg
 .section-label{font-weight:750;font-size:12px;margin:6px 0 9px;color:#425d64}
 .layers{display:grid;gap:8px}
 .layer{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:11px;padding:10px 11px;cursor:pointer;transition:.15s}
-.layer:hover{border-color:#9bbdb1;background:#f8fbf9}.layer input{accent-color:var(--green);width:16px;height:16px}
-.icon{width:29px;height:29px;border-radius:8px;display:grid;place-items:center;font-size:16px;color:white;background:var(--c)}
+.layer:hover{border-color:#9bbdb1;background:#f8fbf9}.layer:has(input:checked){border-color:var(--c);background:color-mix(in srgb,var(--c) 8%,white)}.layer input{accent-color:var(--c);width:16px;height:16px}
+.icon{width:29px;height:29px;border-radius:8px;display:grid;place-items:center;font-size:16px;color:white;background:var(--c);flex:none}.atlas-marker{width:30px;height:30px;border:2px solid #fff;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:16px;font-weight:800;box-shadow:0 1px 6px #152f3755}.marker-ports{background:#078d86}.marker-air{background:#425d78}.marker-ports span{transform:translateY(-1px)}.marker-air span{transform:translateX(1px)}
 .layer strong{font-size:13px;display:block}.layer small{font-size:11px;color:var(--muted)}
 .actions{display:flex;gap:8px;margin:14px 0 9px}
 button{font:inherit;cursor:pointer}
 .primary{background:var(--green);color:#fff;border:0;border-radius:9px;padding:11px 12px;font-weight:750;flex:1}
 .primary:hover{background:#0d5747}.secondary{background:white;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px}
 .status{font-size:11px;min-height:30px;color:var(--muted);padding:3px 1px}
-.legend{border-top:1px solid var(--line);padding-top:13px;margin-top:12px;font-size:11px;color:var(--muted)}
-.legend b{color:var(--ink)}.callout{background:#f1f7f4;border-radius:9px;padding:11px;margin-top:12px;font-size:11px;color:#47615d}
+.legend{border-top:1px solid var(--line);padding-top:13px;margin-top:12px;font-size:11px;color:var(--muted)}.legend b{color:var(--ink)}.legend-list{display:grid;gap:8px;margin:10px 0 12px}.legend-item{display:flex;align-items:center;gap:9px;color:#45616a}.swatch{width:34px;height:12px;position:relative;flex:none}.swatch-road:before{content:'';position:absolute;top:5px;width:34px;border-top:7px solid #f6d5c5;border-radius:9px}.swatch-road:after{content:'';position:absolute;top:6px;left:1px;width:32px;border-top:3px solid #cf5b2e;border-radius:9px}.swatch-rail:before{content:'';position:absolute;top:5px;width:34px;border-top:4px dashed #7653a5}.swatch-water:before{content:'';position:absolute;top:5px;width:34px;border-top:5px solid #1688cc;border-radius:9px}.swatch-port:before,.swatch-air:before{content:'';position:absolute;left:9px;top:-1px;width:19px;height:19px;border:2px solid white;border-radius:50%;box-shadow:0 0 0 1px #aab8bd;background:#078d86}.swatch-port:after{content:'⚓';position:absolute;left:13px;top:1px;color:white;font-size:10px}.swatch-air:before{background:#425d78}.swatch-air:after{content:'✈';position:absolute;left:13px;top:1px;color:white;font-size:10px}.callout{background:#f1f7f4;border-radius:9px;padding:11px;margin-top:12px;font-size:11px;color:#47615d}
 .mapwrap{position:relative;min-width:0}#map{height:100%;width:100%;background:#dce9e8}
 .mapbadge{position:absolute;z-index:500;top:15px;left:15px;background:#fff;border:1px solid var(--line);box-shadow:0 3px 12px #17333018;padding:9px 12px;border-radius:9px;font-size:12px}
 .mapbadge b{display:block}.mapbadge span{color:var(--muted);font-size:11px}
@@ -56,15 +55,15 @@ button{font:inherit;cursor:pointer}
 <div style="display:flex;gap:7px"><input id="place" class="searchbox" placeholder="Ex.: Porto Velho, RO" style="margin-top:0"><button id="search" class="secondary" aria-label="Buscar local">⌕</button></div>
 <div class="section-label">Modais de transporte</div>
 <div class="layers">
-<label class="layer"><span class="icon" style="--c:#cf7542">⌁</span><span><strong>Rodoviário</strong><small>vias principais</small></span><input type="checkbox" value="roads" style="margin-left:auto"></label>
-<label class="layer"><span class="icon" style="--c:#7653a5">━</span><span><strong>Ferroviário</strong><small>linhas e pátios</small></span><input type="checkbox" value="rail" style="margin-left:auto"></label>
-<label class="layer"><span class="icon" style="--c:#2873a5">≈</span><span><strong>Hidroviário</strong><small>rios e canais</small></span><input type="checkbox" value="water" style="margin-left:auto"></label>
-<label class="layer"><span class="icon" style="--c:#168e94">⚓</span><span><strong>Portos</strong><small>portos e terminais</small></span><input type="checkbox" value="ports" style="margin-left:auto"></label>
-<label class="layer"><span class="icon" style="--c:#536b80">✈</span><span><strong>Aeroportuário</strong><small>aeródromos</small></span><input type="checkbox" value="air" style="margin-left:auto"></label>
+<label class="layer" style="--c:#cf5b2e"><span class="icon">↗</span><span><strong>Rodoviário</strong><small>vias principais</small></span><input type="checkbox" value="roads" style="margin-left:auto"></label>
+<label class="layer" style="--c:#7653a5"><span class="icon">╫</span><span><strong>Ferroviário</strong><small>linhas e pátios</small></span><input type="checkbox" value="rail" style="margin-left:auto"></label>
+<label class="layer" style="--c:#1688cc"><span class="icon">≈</span><span><strong>Hidroviário</strong><small>rios e canais</small></span><input type="checkbox" value="water" style="margin-left:auto"></label>
+<label class="layer" style="--c:#078d86"><span class="icon">⚓</span><span><strong>Portos</strong><small>portos e terminais</small></span><input type="checkbox" value="ports" style="margin-left:auto"></label>
+<label class="layer" style="--c:#425d78"><span class="icon">✈</span><span><strong>Aeroportuário</strong><small>aeródromos</small></span><input type="checkbox" value="air" style="margin-left:auto"></label>
 </div>
 <div class="actions"><button id="load" class="primary">Buscar na área do mapa</button><button id="clear" class="secondary">Limpar</button></div>
 <div id="status" class="status" aria-live="polite">Escolha modais e aproxime o mapa para consultar dados.</div>
-<div class="legend"><b>Como explorar</b><br>Arraste e aproxime o mapa até uma região ou município. A consulta é feita somente dentro da área exibida.</div>
+<div class="legend"><b>Legenda dos modais</b><div class="legend-list"><div class="legend-item"><span class="swatch swatch-road"></span>Rodoviário · faixa laranja dupla</div><div class="legend-item"><span class="swatch swatch-rail"></span>Ferroviário · linha roxa tracejada</div><div class="legend-item"><span class="swatch swatch-water"></span>Hidroviário · linha azul espessa</div><div class="legend-item"><span class="swatch swatch-port"></span>Portos · marcador de âncora</div><div class="legend-item"><span class="swatch swatch-air"></span>Aeroportuário · marcador de avião</div></div><b>Como explorar</b><br>Arraste e aproxime o mapa até uma região ou município. Ative os modais e consulte a área exibida.</div>
 <div class="callout"><b>Sobre os dados</b><br>As feições vêm do OpenStreetMap e são mantidas por colaboradores. Cobertura, classificação e atualização variam por região; este mapa não substitui cadastros oficiais nem representa um inventário completo.</div>
 </aside>
 <section class="mapwrap"><div id="map"></div><div class="mapbadge"><b>Brasil</b><span id="bounds">Visão nacional</span></div></section>
@@ -75,7 +74,7 @@ button{font:inherit;cursor:pointer}
 (function(){
 const map=L.map('map',{zoomControl:true,minZoom:3}).setView([-14.2,-52.2],4);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
-const colors={roads:'#cf7542',rail:'#7653a5',water:'#2873a5',ports:'#168e94',air:'#536b80'};
+const colors={roads:'#cf5b2e',rail:'#7653a5',water:'#1688cc',ports:'#078d86',air:'#425d78'};
 const labels={roads:'Rodoviário',rail:'Ferroviário',water:'Hidroviário',ports:'Porto / terminal',air:'Aeroportuário'};
 let groups={}, cache=new Map();
 const status=document.getElementById('status'), bounds=document.getElementById('bounds');
@@ -93,7 +92,7 @@ function showModal(type,name,tags,coords){
 function clearLayers(){Object.values(groups).forEach(g=>map.removeLayer(g));groups={}}
 function queryFor(type,b){
  const box=b.getSouth()+','+b.getWest()+','+b.getNorth()+','+b.getEast();
- if(type==='roads')return '[out:json][timeout:35];(way["highway"~"^(motorway|trunk|primary|secondary)$"]('+box+'););out center tags;';
+ if(type==='roads')return '[out:json][timeout:35];(way["highway"~"^(motorway|trunk|primary|secondary)$"]('+box+'););out geom tags;';
  if(type==='rail')return '[out:json][timeout:35];(way["railway"~"^(rail|light_rail|narrow_gauge|subway)$"]('+box+'););out geom tags;';
  if(type==='water')return '[out:json][timeout:35];(way["waterway"~"^(river|canal)$"]('+box+'););out geom tags;';
  if(type==='ports')return '[out:json][timeout:35];(nwr["harbour"]('+box+');nwr["industrial"="port"]('+box+');nwr["landuse"="port"]('+box+');nwr["seamark:type"="harbour"]('+box+'););out center tags;';
@@ -103,12 +102,22 @@ function render(type,els){
  const layer=L.layerGroup();
  els.forEach(el=>{
   const tags=el.tags||{}, coords=centerOf(el), name=featureName(tags), color=colors[type];
-  if(el.geometry&&el.geometry.length>1&&(type==='rail'||type==='water')){
+  const openCard=()=>showModal(type,name,tags,coords);
+  if(el.geometry&&el.geometry.length>1&&(type==='roads'||type==='rail'||type==='water')){
    const pts=el.geometry.map(p=>[p.lat,p.lon]);
-   L.polyline(pts,{color,weight:type==='rail'?3:2,opacity:.8,dashArray:type==='rail'?'7 5':null}).addTo(layer).on('click',()=>showModal(type,name,tags,coords))
+   if(type==='roads'){
+    L.polyline(pts,{color:'#f6d5c5',weight:9,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(layer).on('click',openCard);
+    L.polyline(pts,{color,weight:4,opacity:.98,lineCap:'round',lineJoin:'round'}).addTo(layer).on('click',openCard);
+   }else if(type==='rail'){
+    L.polyline(pts,{color:'#7653a5',weight:4,opacity:.95,dashArray:'9 4',lineCap:'butt'}).addTo(layer).on('click',openCard);
+   }else{
+    L.polyline(pts,{color:'#1688cc',weight:5,opacity:.88,lineCap:'round',lineJoin:'round'}).addTo(layer).on('click',openCard);
+   }
   }else{
-   const marker=L.circleMarker(coords,{radius:type==='air'?6:5,color,fillColor:color,fillOpacity:.85,weight:1}).addTo(layer);
-   marker.bindTooltip(escapeHtml(name),{direction:'top'});marker.on('click',()=>showModal(type,name,tags,coords))
+   const glyph=type==='ports'?'⚓':'✈';
+   const icon=L.divIcon({className:'',html:'<div class="atlas-marker marker-'+type+'"><span>'+glyph+'</span></div>',iconSize:[30,30],iconAnchor:[15,15]});
+   const marker=L.marker(coords,{icon}).addTo(layer);
+   marker.bindTooltip(escapeHtml(name),{direction:'top'});marker.on('click',openCard)
   }
  });
  layer.addTo(map);groups[type]=layer
