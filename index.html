@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atlas da Infraestrutura — mapa modal</title>
+<link rel="preconnect" href="https://unpkg.com"><link rel="preconnect" href="https://tile.openstreetmap.org">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+:root{--ink:#132b35;--muted:#607780;--paper:#f4f7f5;--line:#dce6e2;--green:#146b58;--blue:#2873a5;--orange:#d17c30;--purple:#7653a5;--teal:#168e94}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper)}
+header{height:70px;background:#102d36;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 26px}
+.brand{font-weight:750;letter-spacing:.01em;font-size:18px}.brand span{color:#68c4a4}.headnote{font-size:12px;color:#c5d7d3}
+main{display:grid;grid-template-columns:330px minmax(0,1fr);height:calc(100vh - 70px);min-height:580px}
+aside{background:#fff;border-right:1px solid var(--line);padding:22px 18px;overflow:auto}
+.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--green);font-weight:800}
+h1{font-size:25px;line-height:1.12;margin:8px 0 9px;letter-spacing:-.03em}p{margin:0;color:var(--muted)}
+.intro{font-size:13px;margin-bottom:18px}
+.searchbox{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;margin:10px 0 14px;font:inherit}
+.section-label{font-weight:750;font-size:12px;margin:6px 0 9px;color:#425d64}
+.layers{display:grid;gap:8px}
+.layer{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:11px;padding:10px 11px;cursor:pointer;transition:.15s}
+.layer:hover{border-color:#9bbdb1;background:#f8fbf9}.layer input{accent-color:var(--green);width:16px;height:16px}
+.icon{width:29px;height:29px;border-radius:8px;display:grid;place-items:center;font-size:16px;color:white;background:var(--c)}
+.layer strong{font-size:13px;display:block}.layer small{font-size:11px;color:var(--muted)}
+.actions{display:flex;gap:8px;margin:14px 0 9px}
+button{font:inherit;cursor:pointer}
+.primary{background:var(--green);color:#fff;border:0;border-radius:9px;padding:11px 12px;font-weight:750;flex:1}
+.primary:hover{background:#0d5747}.secondary{background:white;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px}
+.status{font-size:11px;min-height:30px;color:var(--muted);padding:3px 1px}
+.legend{border-top:1px solid var(--line);padding-top:13px;margin-top:12px;font-size:11px;color:var(--muted)}
+.legend b{color:var(--ink)}.callout{background:#f1f7f4;border-radius:9px;padding:11px;margin-top:12px;font-size:11px;color:#47615d}
+.mapwrap{position:relative;min-width:0}#map{height:100%;width:100%;background:#dce9e8}
+.mapbadge{position:absolute;z-index:500;top:15px;left:15px;background:#fff;border:1px solid var(--line);box-shadow:0 3px 12px #17333018;padding:9px 12px;border-radius:9px;font-size:12px}
+.mapbadge b{display:block}.mapbadge span{color:var(--muted);font-size:11px}
+.leaflet-popup-content-wrapper{border-radius:10px}.leaflet-popup-content{font-family:inherit}
+.modal-backdrop{position:fixed;inset:0;background:#0b252bb3;z-index:2000;display:none;align-items:center;justify-content:center;padding:18px}
+.modal-backdrop.open{display:flex}.modal{background:white;width:min(520px,100%);max-height:85vh;overflow:auto;border-radius:16px;padding:23px;box-shadow:0 20px 70px #0004;position:relative}
+.close{position:absolute;right:15px;top:12px;border:0;background:#eef4f1;border-radius:50%;width:34px;height:34px;font-size:20px}
+.modal h2{margin:7px 36px 8px 0;font-size:22px;line-height:1.2}.modal p{font-size:14px}
+.pill{display:inline-block;border-radius:99px;background:#e9f3ef;padding:5px 9px;color:#1d6654;font-size:11px;font-weight:750;margin:0 0 11px}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.detail{background:#f5f8f6;padding:11px;border-radius:9px}.detail small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.detail b{font-size:13px}
+.modal-note{font-size:11px!important;border-top:1px solid var(--line);padding-top:12px}
+.loading{display:inline-block;width:11px;height:11px;border:2px solid #cadaD5;border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:800px){header{height:58px;padding:0 16px}.headnote{display:none}main{display:flex;flex-direction:column;height:auto;min-height:calc(100vh - 58px)}aside{order:2;overflow:visible;border-right:0;border-top:1px solid var(--line);padding:18px 15px}.mapwrap{order:1;height:58vh;min-height:380px}.layers{grid-template-columns:1fr 1fr}.layer{padding:8px}.icon{width:25px;height:25px}h1{font-size:22px}}
+@media(max-width:430px){.layers{grid-template-columns:1fr 1fr}.layer small{font-size:10px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><span>ATLAS</span> DA INFRAESTRUTURA</div><div class="headnote">Brasil · visualização por modal · dados colaborativos</div></header>
+<main>
+<aside>
+<div class="kicker">Explorar o território</div>
+<h1>Infraestrutura em camadas</h1>
+<p class="intro">Ative um ou mais modais e consulte os elementos mapeados na área visível. Clique em uma feição para abrir sua ficha.</p>
+<div class="section-label">Localizar município ou região</div>
+<div style="display:flex;gap:7px"><input id="place" class="searchbox" placeholder="Ex.: Porto Velho, RO" style="margin-top:0"><button id="search" class="secondary" aria-label="Buscar local">⌕</button></div>
+<div class="section-label">Modais de transporte</div>
+<div class="layers">
+<label class="layer"><span class="icon" style="--c:#cf7542">⌁</span><span><strong>Rodoviário</strong><small>vias principais</small></span><input type="checkbox" value="roads" style="margin-left:auto"></label>
+<label class="layer"><span class="icon" style="--c:#7653a5">━</span><span><strong>Ferroviário</strong><small>linhas e pátios</small></span><input type="checkbox" value="rail" style="margin-left:auto"></label>
+<label class="layer"><span class="icon" style="--c:#2873a5">≈</span><span><strong>Hidroviário</strong><small>rios e canais</small></span><input type="checkbox" value="water" style="margin-left:auto"></label>
+<label class="layer"><span class="icon" style="--c:#168e94">⚓</span><span><strong>Portos</strong><small>portos e terminais</small></span><input type="checkbox" value="ports" style="margin-left:auto"></label>
+<label class="layer"><span class="icon" style="--c:#536b80">✈</span><span><strong>Aeroportuário</strong><small>aeródromos</small></span><input type="checkbox" value="air" style="margin-left:auto"></label>
+</div>
+<div class="actions"><button id="load" class="primary">Buscar na área do mapa</button><button id="clear" class="secondary">Limpar</button></div>
+<div id="status" class="status" aria-live="polite">Escolha modais e aproxime o mapa para consultar dados.</div>
+<div class="legend"><b>Como explorar</b><br>Arraste e aproxime o mapa até uma região ou município. A consulta é feita somente dentro da área exibida.</div>
+<div class="callout"><b>Sobre os dados</b><br>As feições vêm do OpenStreetMap e são mantidas por colaboradores. Cobertura, classificação e atualização variam por região; este mapa não substitui cadastros oficiais nem representa um inventário completo.</div>
+</aside>
+<section class="mapwrap"><div id="map"></div><div class="mapbadge"><b>Brasil</b><span id="bounds">Visão nacional</span></div></section>
+</main>
+<div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><article class="modal"><button class="close" id="close" aria-label="Fechar">×</button><div class="kicker">Ficha da infraestrutura</div><div id="modalBody"></div></article></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function(){
+const map=L.map('map',{zoomControl:true,minZoom:3}).setView([-14.2,-52.2],4);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+const colors={roads:'#cf7542',rail:'#7653a5',water:'#2873a5',ports:'#168e94',air:'#536b80'};
+const labels={roads:'Rodoviário',rail:'Ferroviário',water:'Hidroviário',ports:'Porto / terminal',air:'Aeroportuário'};
+let groups={}, cache=new Map();
+const status=document.getElementById('status'), bounds=document.getElementById('bounds');
+function selected(){return Array.from(document.querySelectorAll('.layer input:checked')).map(x=>x.value)}
+function say(s){status.innerHTML=s}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function featureName(tags){return tags.name||tags['name:pt']||tags.ref||tags.operator||tags.railway||tags.highway||tags.waterway||'Elemento sem nome no OpenStreetMap'}
+function centerOf(el){if(el.lat!==undefined)return [el.lat,el.lon];if(el.center)return [el.center.lat,el.center.lon];if(el.geometry&&el.geometry.length){const p=el.geometry[Math.floor(el.geometry.length/2)];return [p.lat,p.lon]}return map.getCenter()}
+function showModal(type,name,tags,coords){
+ const entries=Object.entries(tags||{}).filter(x=>!x[0].startsWith('name:')).slice(0,8);
+ const facts=entries.length?entries.map(([k,v])=>'<div class="detail"><small>'+escapeHtml(k.replaceAll('_',' '))+'</small><b>'+escapeHtml(v)+'</b></div>').join(''):'<div class="detail"><small>Coordenadas aproximadas</small><b>'+coords[0].toFixed(4)+', '+coords[1].toFixed(4)+'</b></div>';
+ document.getElementById('modalBody').innerHTML='<span class="pill">'+labels[type]+'</span><h2 id="modalTitle">'+escapeHtml(name)+'</h2><p>Registro cartográfico colaborativo localizado nesta área do mapa.</p><div class="details">'+facts+'</div><p class="modal-note">Fonte: OpenStreetMap. A ficha mostra atributos associados à feição; ausência de informação não significa ausência de infraestrutura. Coordenadas do ponto exibido podem representar o centro de uma linha ou área.</p>';
+ document.getElementById('backdrop').classList.add('open')
+}
+function clearLayers(){Object.values(groups).forEach(g=>map.removeLayer(g));groups={}}
+function queryFor(type,b){
+ const box=b.getSouth()+','+b.getWest()+','+b.getNorth()+','+b.getEast();
+ if(type==='roads')return '[out:json][timeout:35];(way["highway"~"^(motorway|trunk|primary|secondary)$"]('+box+'););out center tags;';
+ if(type==='rail')return '[out:json][timeout:35];(way["railway"~"^(rail|light_rail|narrow_gauge|subway)$"]('+box+'););out geom tags;';
+ if(type==='water')return '[out:json][timeout:35];(way["waterway"~"^(river|canal)$"]('+box+'););out geom tags;';
+ if(type==='ports')return '[out:json][timeout:35];(nwr["harbour"]('+box+');nwr["industrial"="port"]('+box+');nwr["landuse"="port"]('+box+');nwr["seamark:type"="harbour"]('+box+'););out center tags;';
+ return '[out:json][timeout:35];(nwr["aeroway"="aerodrome"]('+box+'););out center tags;'
+}
+function render(type,els){
+ const layer=L.layerGroup();
+ els.forEach(el=>{
+  const tags=el.tags||{}, coords=centerOf(el), name=featureName(tags), color=colors[type];
+  if(el.geometry&&el.geometry.length>1&&(type==='rail'||type==='water')){
+   const pts=el.geometry.map(p=>[p.lat,p.lon]);
+   L.polyline(pts,{color,weight:type==='rail'?3:2,opacity:.8,dashArray:type==='rail'?'7 5':null}).addTo(layer).on('click',()=>showModal(type,name,tags,coords))
+  }else{
+   const marker=L.circleMarker(coords,{radius:type==='air'?6:5,color,fillColor:color,fillOpacity:.85,weight:1}).addTo(layer);
+   marker.bindTooltip(escapeHtml(name),{direction:'top'});marker.on('click',()=>showModal(type,name,tags,coords))
+  }
+ });
+ layer.addTo(map);groups[type]=layer
+}
+async function load(){
+ const types=selected();if(!types.length){say('Marque pelo menos um modal para consultar.');return}
+ if(map.getZoom()<6){say('Aproxime mais o mapa (zoom 6 ou maior) para limitar a consulta a uma região.');return}
+ const b=map.getBounds(), latSpan=b.getNorth()-b.getSouth(),lonSpan=b.getEast()-b.getWest();
+ if(latSpan>8||lonSpan>8){say('A área ainda está muito ampla. Aproxime mais o mapa e tente novamente.');return}
+ clearLayers();say('<span class="loading"></span>Consultando OpenStreetMap para '+types.length+' modal(is)…');
+ const key=types.sort().join(',')+':'+b.toBBoxString().split(',').map(v=>Number(v).toFixed(2)).join(',');
+ try{
+  const cached=cache.get(key);if(cached){Object.entries(cached).forEach(([t,els])=>render(t,els));say('Consulta carregada do cache desta sessão. Clique nas feições para abrir fichas.');return}
+  const output={};let total=0;
+  for(const type of types){
+   const response=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(queryFor(type,b))});
+   if(!response.ok)throw new Error('O serviço de dados respondeu com erro ('+response.status+'). Tente novamente em instantes.');
+   const data=await response.json();output[type]=data.elements||[];total+=output[type].length;render(type,output[type])
+  }
+  cache.set(key,output);say(total+' feição(ões) encontradas. Clique em um ponto ou linha para ver atributos. Dados do OpenStreetMap.')
+ }catch(e){say('Não foi possível concluir a consulta. '+escapeHtml(e.message)+' Se o serviço estiver ocupado, aguarde e tente novamente.')}
+}
+document.getElementById('load').addEventListener('click',load);
+document.getElementById('clear').addEventListener('click',()=>{clearLayers();say('Camadas removidas do mapa.')});
+document.getElementById('close').addEventListener('click',()=>document.getElementById('backdrop').classList.remove('open'));
+document.getElementById('backdrop').addEventListener('click',e=>{if(e.target.id==='backdrop')e.currentTarget.classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('backdrop').classList.remove('open')});
+map.on('moveend',()=>{const z=map.getZoom();bounds.textContent=z<6?'Visão nacional — aproxime para consultar': 'Zoom '+z+' · consulta por área visível'});
+async function searchPlace(){const q=document.getElementById('place').value.trim();if(!q)return;say('<span class="loading"></span>Localizando '+escapeHtml(q)+'…');try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q),{headers:{'Accept-Language':'pt-BR'}});if(!r.ok)throw new Error('Busca indisponível.');const a=await r.json();if(!a.length)throw new Error('Local não encontrado.');map.setView([Number(a[0].lat),Number(a[0].lon)],9);say('Área localizada. Selecione os modais e consulte.')}catch(e){say(escapeHtml(e.message))}}
+document.getElementById('search').addEventListener('click',searchPlace);
+document.getElementById('place').addEventListener('keydown',e=>{if(e.key==='Enter')searchPlace()});
+})();
+</script>
+</body>
+</html>
