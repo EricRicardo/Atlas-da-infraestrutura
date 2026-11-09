@@ -50,21 +50,21 @@ button{font:inherit;cursor:pointer}
 <aside>
 <div class="kicker">Explorar o território</div>
 <h1>Infraestrutura em camadas</h1>
-<p class="intro">Ative um ou mais modais e consulte os elementos mapeados na área visível. Clique em uma feição para abrir sua ficha.</p>
+<p class="intro">Ative os modais para ver as redes principais já na visão nacional. Aproxime o mapa para consultar mais detalhes por área.</p>
 <div class="section-label">Localizar município ou região</div>
 <div style="display:flex;gap:7px"><input id="place" class="searchbox" placeholder="Ex.: Porto Velho, RO" style="margin-top:0"><button id="search" class="secondary" aria-label="Buscar local">⌕</button></div>
 <div class="section-label">Modais de transporte</div>
 <div class="layers">
 <label class="layer" style="--c:#cf5b2e"><span class="icon">↗</span><span><strong>Rodoviário</strong><small>vias principais</small></span><input type="checkbox" value="roads" style="margin-left:auto"></label>
-<label class="layer" style="--c:#7653a5"><span class="icon">╫</span><span><strong>Ferroviário</strong><small>linhas e pátios</small></span><input type="checkbox" value="rail" style="margin-left:auto"></label>
-<label class="layer" style="--c:#1688cc"><span class="icon">≈</span><span><strong>Hidroviário</strong><small>rios e canais</small></span><input type="checkbox" value="water" style="margin-left:auto"></label>
+<label class="layer" style="--c:#7653a5"><span class="icon">╫</span><span><strong>Ferroviário</strong><small>rede em operação · nacional</small></span><input type="checkbox" value="rail" style="margin-left:auto"></label>
+<label class="layer" style="--c:#1688cc"><span class="icon">≈</span><span><strong>Hidroviário</strong><small>hidrovias · nacional</small></span><input type="checkbox" value="water" style="margin-left:auto"></label>
 <label class="layer" style="--c:#078d86"><span class="icon">⚓</span><span><strong>Portos</strong><small>portos e terminais</small></span><input type="checkbox" value="ports" style="margin-left:auto"></label>
 <label class="layer" style="--c:#425d78"><span class="icon">✈</span><span><strong>Aeroportuário</strong><small>aeródromos</small></span><input type="checkbox" value="air" style="margin-left:auto"></label>
 </div>
 <div class="actions"><button id="load" class="primary">Buscar na área do mapa</button><button id="clear" class="secondary">Limpar</button></div>
 <div id="status" class="status" aria-live="polite">Escolha modais e aproxime o mapa para consultar dados.</div>
 <div class="legend"><b>Legenda dos modais</b><div class="legend-list"><div class="legend-item"><span class="swatch swatch-road"></span>Rodoviário · faixa laranja dupla</div><div class="legend-item"><span class="swatch swatch-rail"></span>Ferroviário · linha roxa tracejada</div><div class="legend-item"><span class="swatch swatch-water"></span>Hidroviário · linha azul espessa</div><div class="legend-item"><span class="swatch swatch-port"></span>Portos · marcador de âncora</div><div class="legend-item"><span class="swatch swatch-air"></span>Aeroportuário · marcador de avião</div></div><b>Como explorar</b><br>Arraste e aproxime o mapa até uma região ou município. Ative os modais e consulte a área exibida.</div>
-<div class="callout"><b>Sobre os dados</b><br>As feições vêm do OpenStreetMap e são mantidas por colaboradores. Cobertura, classificação e atualização variam por região; este mapa não substitui cadastros oficiais nem representa um inventário completo.</div>
+<div class="callout"><b>Sobre os dados</b><br>Na visão nacional, ferrovias em operação são da ANTT via Infra S.A. e hidrovias vêm da base geográfica da Infra S.A. Ao aproximar, o mapa também consulta o OpenStreetMap. O traçado de uma hidrovia não garante navegabilidade contínua ou condições operacionais na data da consulta.</div>
 </aside>
 <section class="mapwrap"><div id="map"></div><div class="mapbadge"><b>Brasil</b><span id="bounds">Visão nacional</span></div></section>
 </main>
@@ -98,6 +98,26 @@ function queryFor(type,b){
  if(type==='ports')return '[out:json][timeout:35];(nwr["harbour"]('+box+');nwr["industrial"="port"]('+box+');nwr["landuse"="port"]('+box+');nwr["seamark:type"="harbour"]('+box+'););out center tags;';
  return '[out:json][timeout:35];(nwr["aeroway"="aerodrome"]('+box+'););out center tags;'
 }
+function renderNational(type,features){
+ const layer=L.layerGroup(),color=colors[type];
+ features.forEach(feature=>{
+  const props=feature.properties||{}, geometry=feature.geometry;
+  if(!geometry)return;
+  const tags={...props};
+  tags.name=type==='rail'?(props.vhr_nomeli||props.vhr_ferrov||'Ferrovia em operação'):(props.vhr_nomehidrovia||props.vhr_nomerio||'Trecho hidroviário');
+  const paths=geometry.type==='LineString'?[geometry.coordinates]:(geometry.coordinates||[]);
+  paths.forEach(path=>{
+   if(!path||path.length<2)return;
+   const points=path.map(p=>[p[1],p[0]]),coords=points[Math.floor(points.length/2)];
+   const style=type==='rail'?{color:'#7653a5',weight:zoomForStroke(),opacity:.96,dashArray:'10 4',lineCap:'butt'}:{color:'#087fc0',weight:zoomForStroke()+1,opacity:.9,lineCap:'round',lineJoin:'round'};
+   const line=L.polyline(points,style).addTo(layer);
+   line.bindTooltip(escapeHtml(tags.name),{sticky:true,direction:'top'});
+   line.on('click',()=>showModal(type,tags.name,tags,coords));
+  });
+ });
+ layer.addTo(map);groups[type]=layer;
+}
+function zoomForStroke(){return map.getZoom()<5?3.5:4}
 function render(type,els){
  const layer=L.layerGroup();
  els.forEach(el=>{
@@ -123,22 +143,59 @@ function render(type,els){
  layer.addTo(map);groups[type]=layer
 }
 async function load(){
- const types=selected();if(!types.length){say('Marque pelo menos um modal para consultar.');return}
- if(map.getZoom()<6){say('Aproxime mais o mapa (zoom 6 ou maior) para limitar a consulta a uma região.');return}
- const b=map.getBounds(), latSpan=b.getNorth()-b.getSouth(),lonSpan=b.getEast()-b.getWest();
- if(latSpan>8||lonSpan>8){say('A área ainda está muito ampla. Aproxime mais o mapa e tente novamente.');return}
- clearLayers();say('<span class="loading"></span>Consultando OpenStreetMap para '+types.length+' modal(is)…');
- const key=types.sort().join(',')+':'+b.toBBoxString().split(',').map(v=>Number(v).toFixed(2)).join(',');
+ const requested=selected(), zoom=map.getZoom(), overview=requested.filter(t=>(t==='rail'||t==='water')&&zoom<6);
+ const local=requested.filter(t=>!overview.includes(t));
+ if(!requested.length){say('Marque pelo menos um modal para consultar.');return}
+ if(zoom<6&&!overview.length){say('Aproxime mais o mapa para consultar este modal. Ferrovias e hidrovias já podem ser vistas na visão nacional.');return}
+ clearLayers();
+ const b=map.getBounds(), parts=[];
+ if(overview.length) parts.push('rede nacional de '+overview.map(t=>labels[t].toLowerCase()).join(' e '));
+ if(local.length&&zoom>=6) parts.push('detalhes locais');
+ if(local.length&&zoom<6) parts.push('outros modais disponíveis ao aproximar');
+ say('<span class="loading"></span>Carregando '+parts.join(' e ')+'…');
+ const cacheKey='overview:'+overview.sort().join(',')+':'+zoom;
  try{
-  const cached=cache.get(key);if(cached){Object.entries(cached).forEach(([t,els])=>render(t,els));say('Consulta carregada do cache desta sessão. Clique nas feições para abrir fichas.');return}
-  const output={};let total=0;
-  for(const type of types){
-   const response=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(queryFor(type,b))});
-   if(!response.ok)throw new Error('O serviço de dados respondeu com erro ('+response.status+'). Tente novamente em instantes.');
-   const data=await response.json();output[type]=data.elements||[];total+=output[type].length;render(type,output[type])
+  let total=0;
+  if(overview.length){
+   const cached=cache.get(cacheKey);
+   if(cached){Object.entries(cached).forEach(([t,features])=>{renderNational(t,features);total+=features.length})}
+   else{
+    const national={};
+    for(const type of overview){
+     const base=type==='rail'
+      ?'https://geo.infrasa.gov.br/server/rest/services/Hosted/Concess%C3%B5es_ferrovi%C3%A1rias_em_Opera%C3%A7%C3%A3o/FeatureServer/13/query'
+      :'https://geo.infrasa.gov.br/server/rest/services/Hosted/hidrovias_MIL1/FeatureServer/2/query';
+     const params=new URLSearchParams({where:'1=1',outFields:type==='rail'?'vhr_ferrov,vhr_nomeli,vhr_siglap,vhr_sigl_1,nome_patioinicial,nome_patiofinal,uf':'vhr_nomehidrovia,vhr_nomerio,vhr_bacia,competencia,natureza,restricao,periodonavegacao,flt_caladom,capacidade',returnGeometry:'true',outSR:'4326',f:'geojson',geometryPrecision:'4',maxAllowableOffset:zoom<5?'0.04':'0.015',resultRecordCount:type==='rail'?'20000':'2000'});
+     const response=await fetch(base+'?'+params.toString());
+     if(!response.ok)throw new Error('A fonte oficial respondeu com erro ('+response.status+').');
+     const data=await response.json();
+     if(data.error)throw new Error(data.error.message||'Erro retornado pela fonte geográfica.');
+     national[type]=data.features||[];
+     renderNational(type,national[type]);
+     total+=national[type].length;
+    }
+    cache.set(cacheKey,national);
+   }
   }
-  cache.set(key,output);say(total+' feição(ões) encontradas. Clique em um ponto ou linha para ver atributos. Dados do OpenStreetMap.')
- }catch(e){say('Não foi possível concluir a consulta. '+escapeHtml(e.message)+' Se o serviço estiver ocupado, aguarde e tente novamente.')}
+  if(local.length&&zoom>=6){
+   const key=local.slice().sort().join(',')+':'+b.toBBoxString().split(',').map(v=>Number(v).toFixed(2)).join(',');
+   const cached=cache.get(key);
+   if(cached){Object.entries(cached).forEach(([t,els])=>{render(t,els);total+=els.length})}
+   else{
+    const output={};
+    for(const type of local){
+     const response=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(queryFor(type,b))});
+     if(!response.ok)throw new Error('O serviço OpenStreetMap respondeu com erro ('+response.status+').');
+     const data=await response.json();output[type]=data.elements||[];total+=output[type].length;render(type,output[type])
+    }
+    cache.set(key,output);
+   }
+  }
+  let note=total+' feição(ões) exibidas. Clique nas linhas para ver nomes e atributos.';
+  if(local.length&&zoom<6)note+=' Aproxime o mapa para ver os demais modais.';
+  if(!total)note='Nenhuma feição encontrada para os modais selecionados nesta área.';
+  say(note);
+ }catch(e){say('Não foi possível concluir a consulta. '+escapeHtml(e.message)+' Tente novamente em instantes.')}
 }
 document.getElementById('load').addEventListener('click',load);
 document.getElementById('clear').addEventListener('click',()=>{clearLayers();say('Camadas removidas do mapa.')});
