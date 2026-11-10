@@ -57,7 +57,11 @@ button{font:inherit;cursor:pointer}
 <div class="layers">
 <label class="layer" style="--c:#cf5b2e"><span class="icon">↗</span><span><strong>Rodoviário</strong><small>vias principais</small></span><input type="checkbox" value="roads" style="margin-left:auto"></label>
 <label class="layer" style="--c:#7653a5"><span class="icon">╫</span><span><strong>Ferroviário</strong><small>rede em operação · nacional</small></span><input type="checkbox" value="rail" style="margin-left:auto"></label>
-<label class="layer" style="--c:#1688cc"><span class="icon">≈</span><span><strong>Hidroviário</strong><small>trechos e navegabilidade</small></span><input type="checkbox" value="water" style="margin-left:auto"></label>
+<label class="layer" style="--c:#1688cc"><span class="icon">≈</span><span><strong>Hidroviário</strong><small>vias navegáveis · América do Sul</small></span><input type="checkbox" value="water" style="margin-left:auto"></label>
+<label class="layer" style="--c:#6b5b95"><span class="icon">⇄</span><span><strong>Ferrovias vizinhas</strong><small>redes regionais · países limítrofes</small></span><input type="checkbox" value="railregion" style="margin-left:auto"></label>
+<label class="layer" style="--c:#ba7040"><span class="icon">⚠</span><span><strong>Sem operação</strong><small>status regional · possível reavaliação</small></span><input type="checkbox" value="railinactive" style="margin-left:auto"></label>
+<label class="layer" style="--c:#e37b31"><span class="icon">⚒</span><span><strong>Em construção</strong><small>obras ferroviárias no Brasil</small></span><input type="checkbox" value="railworks" style="margin-left:auto"></label>
+<label class="layer" style="--c:#5489a0"><span class="icon">⌁</span><span><strong>Em planejamento</strong><small>projetos ferroviários no Brasil</small></span><input type="checkbox" value="railplan" style="margin-left:auto"></label>
 <label class="layer" style="--c:#d28b22"><span class="icon">⇵</span><span><strong>Eclusas</strong><small>localização e dimensões</small></span><input type="checkbox" value="locks" style="margin-left:auto"></label>
 <label class="layer" style="--c:#078d86"><span class="icon">⚓</span><span><strong>Portos</strong><small>portos e terminais</small></span><input type="checkbox" value="ports" style="margin-left:auto"></label>
 <label class="layer" style="--c:#425d78"><span class="icon">✈</span><span><strong>Aeroportuário</strong><small>aeródromos</small></span><input type="checkbox" value="air" style="margin-left:auto"></label>
@@ -65,7 +69,7 @@ button{font:inherit;cursor:pointer}
 <div class="actions"><button id="load" class="primary">Buscar na área do mapa</button><button id="clear" class="secondary">Limpar</button></div>
 <div id="status" class="status" aria-live="polite">Escolha modais e aproxime o mapa para consultar dados.</div>
 <div class="legend"><b>Legenda dos modais</b><div class="legend-list"><div class="legend-item"><span class="swatch swatch-road"></span>Rodoviário · faixa laranja dupla</div><div class="legend-item"><span class="swatch swatch-rail"></span>Ferroviário · linha roxa tracejada</div><div class="legend-item"><span class="swatch swatch-water"></span>Hidroviário · classes e restrições</div><div class="legend-item"><span style="width:12px;height:12px;border-radius:50%;background:#d28b22;border:2px solid white;box-shadow:0 0 0 1px #aab8bd;margin:0 11px;flex:none"></span>Eclusa · marcador dourado</div><div class="legend-item"><span class="swatch swatch-port"></span>Portos · marcador de âncora</div><div class="legend-item"><span class="swatch swatch-air"></span>Aeroportuário · marcador de avião</div></div><b>Como explorar</b><br>Arraste e aproxime o mapa até uma região ou município. Ative os modais e consulte a área exibida.</div>
-<div class="callout"><b>Sobre os dados</b><br>Na visão nacional, ferrovias em operação são da ANTT via Infra S.A. e hidrovias vêm da base geográfica da Infra S.A. A camada hidroviária oficial informa classificação, profundidades, eclusas associadas e observações; a camada pontual de eclusas informa dimensões e situação. A camada hidroviária oficial informa classificação, profundidades, eclusas associadas e observações; a camada de eclusas informa dimensões e situação. Ao aproximar, o mapa também consulta o OpenStreetMap. O traçado de uma hidrovia não garante navegabilidade contínua ou condições operacionais na data da consulta.</div>
+<div class="callout"><b>Sobre os dados</b><br>Ferrovias brasileiras em operação: ANTT/Infra S.A.; obras e projetos: camada Empreendimentos Ferroviários da Infra S.A., com situação, trecho e bitola quando informados. Redes dos países vizinhos e vias navegáveis: Observatório de Infraestrutura da América do Sul. Os atributos e a cobertura variam por país. A classe hidroviária não garante navegabilidade contínua nem condições operacionais na data da consulta. Trechos marcados sem operação não têm recuperabilidade comprovada; isso exige avaliação técnica e econômica.</div>
 </aside>
 <section class="mapwrap"><div id="map"></div><div class="mapbadge"><b>Brasil</b><span id="bounds">Visão nacional</span></div></section>
 </main>
@@ -76,7 +80,7 @@ button{font:inherit;cursor:pointer}
 const map=L.map('map',{zoomControl:true,minZoom:3}).setView([-14.2,-52.2],4);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
 const colors={roads:'#cf5b2e',rail:'#7653a5',water:'#1688cc',locks:'#d28b22',ports:'#078d86',air:'#425d78'};
-const labels={roads:'Rodoviário',rail:'Ferroviário',water:'Hidroviário',locks:'Eclusa',ports:'Porto / terminal',air:'Aeroportuário'};
+const labels={roads:'Rodoviário',rail:'Ferroviário',water:'Hidroviário',locks:'Eclusa',ports:'Porto / terminal',air:'Aeroportuário',railregion:'Ferrovias de países vizinhos',railinactive:'Trechos sem operação',railworks:'Ferrovias em construção',railplan:'Projetos ferroviários em planejamento'};
 let groups={}, cache=new Map();
 const status=document.getElementById('status'), bounds=document.getElementById('bounds');
 function selected(){return Array.from(document.querySelectorAll('.layer input:checked')).map(x=>x.value)}
@@ -90,6 +94,10 @@ function showModal(type,name,tags,coords){
  document.getElementById('modalBody').innerHTML='<span class="pill">'+labels[type]+'</span><h2 id="modalTitle">'+escapeHtml(name)+'</h2><p>Registro cartográfico colaborativo localizado nesta área do mapa.</p><div class="details">'+facts+'</div><p class="modal-note">Fonte: OpenStreetMap. A ficha mostra atributos associados à feição; ausência de informação não significa ausência de infraestrutura. Coordenadas do ponto exibido podem representar o centro de uma linha ou área.</p>';
  document.getElementById('backdrop').classList.add('open')
 }
+function openFacts(title,items,note){const facts=items.filter(x=>x[1]!==undefined&&x[1]!==null&&String(x[1]).trim()!==''&&String(x[1]).trim()!=='N/A').map(([k,v])=>'<div class="detail"><small>'+escapeHtml(k)+'</small><b>'+escapeHtml(v)+'</b></div>');facts.push('<div class="detail"><small>Capacidade</small><b>Não informada na fonte consultada</b></div>');document.getElementById('modalBody').innerHTML='<span class="pill">Ferrovia</span><h2 id="modalTitle">'+escapeHtml(title)+'</h2><div class="details">'+facts.join('')+'</div><p class="modal-note">'+note+'</p>';document.getElementById('backdrop').classList.add('open')}
+function railFacts(feature,kind){const p=feature.properties||{};const regional=kind==='railregion'||kind==='railinactive';const title=p.empreendim||p.NAM||p.vhr_nomeli||p.vhr_ferrov||p.label||p.trecho||'Trecho ferroviário';let items;if(regional){items=[['Países/área',p.ZPP],['Situação operacional',p.OPS],['Bitola',p.RGC],['Tipo de serviço',p.TUC],['Identificação',p.NAM]]}else{items=[['Trecho',p.trecho],['Situação',p.situacao||p.tip_situac],['Bitola',p.bitola],['Extensão registrada (km)',p.ext],['Concessionária',p.concession],['Subconcessionária',p.subconcess],['Participação',p.participac],['Identificação',p.sigla||p.vhr_siglap],['Pátio inicial',p.nome_patioinicial],['Pátio final',p.nome_patiofinal],['UF',p.uf]]}let note='Fonte: '+(regional?'Observatório de Infraestrutura da América do Sul':'Infra S.A./ANTT')+'. Os campos refletem o cadastro da fonte; capacidade de transporte não foi informada.';if(kind==='railinactive'||/no operativ/i.test(String(p.OPS||p.situacao||'')))note+=' “Sem operação” não comprova que o trecho possa ser reativado: isso depende de inspeção da via, direito de passagem, custos e viabilidade operacional.';if(kind==='railplan'||/planejamento/i.test(String(p.situacao||'')))note+=' Planejamento não significa obra iniciada.';openFacts(title,items,note)}
+function hydroFacts(feature){const p=feature.properties||{};const title=p.NAM||p.CUR||'Via navegável';const items=[['Sistema hidroviário',p.NAM],['Rio/curso d’água',p.CUR],['Tipo de uso informado',p.TUC],['Países abrangidos',p.ZPP]];const html=items.filter(x=>x[1]).map(([k,v])=>'<div class="detail"><small>'+escapeHtml(k)+'</small><b>'+escapeHtml(v)+'</b></div>').join('');document.getElementById('modalBody').innerHTML='<span class="pill">Hidroviário</span><h2 id="modalTitle">'+escapeHtml(title)+'</h2><div class="details">'+html+'</div><p class="modal-note">Fonte: Observatório de Infraestrutura da América do Sul. Esta camada representa vias navegáveis cadastradas e não informa profundidades ou navegabilidade atual contínua.</p>';document.getElementById('backdrop').classList.add('open')}
+function renderGeoFeatures(type,features){const fc={type:'FeatureCollection',features};const layer=L.geoJSON(fc,{style:f=>{const p=f.properties||{};if(type==='water')return{color:'#1688cc',weight:3,opacity:.84};if(type==='railinactive')return{color:'#c2763c',weight:2.5,dashArray:'7 5',opacity:.9};if(type==='raildetail')return{color:'#563b85',weight:3,opacity:.97};if(type==='railregion')return{color:/operativ/i.test(String(p.OPS||''))?'#6b5b95':'#9b876f',weight:2.3,opacity:.85};if(type==='railworks')return{color:'#e37b31',weight:4,opacity:.98};if(type==='railplan')return{color:'#5489a0',weight:2.5,dashArray:'8 6',opacity:.9};return{color:'#555',weight:3}},onEachFeature:(f,l)=>{const p=f.properties||{};const name=type==='water'?(p.NAM||p.CUR||'Via navegável'):(p.empreendim||p.NAM||p.vhr_nomeli||p.label||'Trecho ferroviário');l.bindTooltip(escapeHtml(name),{sticky:true});l.on('click',()=>type==='water'?hydroFacts(f):railFacts(f,type==='raildetail'?'railop':type))}}).addTo(map);groups[type]=layer;return features.length}
 function clearLayers(){Object.values(groups).forEach(g=>map.removeLayer(g));groups={}}
 function queryFor(type,b){
  const box=b.getSouth()+','+b.getWest()+','+b.getNorth()+','+b.getEast();
@@ -150,58 +158,39 @@ function render(type,els){
  layer.addTo(map);groups[type]=layer
 }
 async function load(){
- const requested=selected(), zoom=map.getZoom(), overview=requested.filter(t=>(t==='rail'||t==='water')&&zoom<6);
- const local=requested.filter(t=>!overview.includes(t));
+ const requested=selected(),zoom=map.getZoom(),overview=requested.filter(t=>t==='rail'||t==='water');
+ const special=requested.filter(t=>['railregion','railinactive','railworks','railplan'].includes(t));
+ const local=requested.filter(t=>!overview.includes(t)&&!special.includes(t));
  if(!requested.length){say('Marque pelo menos um modal para consultar.');return}
- if(zoom<6&&!overview.length&&requested.every(t=>t==='locks')){/* eclusas nacionais usam fonte oficial */}
- clearLayers();
- const b=map.getBounds(), parts=[];
- if(overview.length) parts.push('rede nacional de '+overview.map(t=>labels[t].toLowerCase()).join(' e '));
- if(local.length&&zoom>=6) parts.push('detalhes locais');
- if(local.length&&zoom<6) parts.push('outros modais disponíveis ao aproximar');
+ clearLayers();const b=map.getBounds(),parts=[];
+ if(overview.includes('rail'))parts.push('ferrovias nacionais');if(overview.includes('water'))parts.push('hidrovias sul-americanas');
+ if(special.length)parts.push('camadas ferroviárias complementares');if(local.length&&zoom>=6)parts.push('detalhes locais');if(local.length&&zoom<6)parts.push('outros modais ao aproximar');
  say('<span class="loading"></span>Carregando '+parts.join(' e ')+'…');
- const cacheKey='overview:'+overview.sort().join(',')+':'+zoom;
- try{
-  let total=0;
-  if(overview.length){
-   const cached=cache.get(cacheKey);
-   if(cached){Object.entries(cached).forEach(([t,features])=>{renderNational(t,features);total+=features.length})}
-   else{
-    const national={};
-    for(const type of overview){
-     const base=type==='rail'
-      ?'https://geo.infrasa.gov.br/server/rest/services/Hosted/Concess%C3%B5es_ferrovi%C3%A1rias_em_Opera%C3%A7%C3%A3o/FeatureServer/13/query'
-      :'https://geo.infrasa.gov.br/server/rest/services/SUPEC/HIDROVIAS/MapServer/1/query';
-     const params=new URLSearchParams({where:'1=1',outFields:type==='rail'?'vhr_ferrov,vhr_nomeli,vhr_siglap,vhr_sigl_1,nome_patioinicial,nome_patiofinal,uf':'nome,nome_rio,navegacao,extensao,tempo,cla_icacao,nom_eclusa,jurisdicao,reg_rafica,pro_de_min,pro_de_max,observacao,fonte,URL',returnGeometry:'true',outSR:'4326',f:'geojson',geometryPrecision:'4',maxAllowableOffset:zoom<5?'0.04':'0.015',resultRecordCount:type==='rail'?'20000':'10000'});
-     const response=await fetch(base+'?'+params.toString());
-     if(!response.ok)throw new Error('A fonte oficial respondeu com erro ('+response.status+').');
-     const data=await response.json();
-     if(data.error)throw new Error(data.error.message||'Erro retornado pela fonte geográfica.');
-     national[type]=data.features||[];
-     renderNational(type,national[type]);
-     total+=national[type].length;
+ const bbox=b.toBBoxString().split(',').map(v=>Number(v).toFixed(4)).join(',');const cacheKey='infra:'+requested.slice().sort().join(',')+':'+bbox;
+ try{let total=0;const cached=cache.get(cacheKey);
+  if(cached){Object.entries(cached).forEach(([t,features])=>{if(t==='locks')renderNational(t,features);else if(t==='water'||t==='railregion'||t==='railinactive'||t==='railworks'||t==='railplan')renderGeoFeatures(t,features);else if(t==='rail_detail')renderGeoFeatures('raildetail',features);else render(t,features);total+=features.length})}
+  else{
+   const output={};
+   for(const type of overview){
+    if(type==='water'){
+     const u=new URL('https://geovisor.observatorio-infraestructura-as.org/geoserver/ows');u.search=new URLSearchParams({service:'WFS',version:'2.0.0',request:'GetFeature',typeNames:'Observatorio:vias_navegables',outputFormat:'application/json',srsName:'EPSG:4326',count:'1000',bbox:`${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()},EPSG:4326`}).toString();
+     const r=await fetch(u);if(!r.ok)throw new Error('A fonte regional de hidrovias respondeu com erro ('+r.status+').');const d=await r.json();if(d.exception||d.error)throw new Error('A fonte regional de hidrovias não retornou dados válidos.');output.water=d.features||[];total+=renderGeoFeatures('water',output.water);
+    }else{
+     const base='https://geo.infrasa.gov.br/server/rest/services/Hosted/Concess%C3%B5es_ferrovi%C3%A1rias_em_Opera%C3%A7%C3%A3o/FeatureServer/13/query';const params=new URLSearchParams({where:'1=1',outFields:'vhr_ferrov,vhr_nomeli,vhr_siglap,vhr_sigl_1,nome_patioinicial,nome_patiofinal,uf',returnGeometry:'true',outSR:'4326',f:'geojson',geometryPrecision:'4',maxAllowableOffset:zoom<5?'0.04':'0.015',resultRecordCount:'20000'});const r=await fetch(base+'?'+params);if(!r.ok)throw new Error('A fonte ferroviária oficial respondeu com erro ('+r.status+').');const d=await r.json();if(d.error)throw new Error(d.error.message||'Erro na fonte ferroviária oficial.');output.rail=d.features||[];renderNational('rail',output.rail);total+=output.rail.length;
+     const detailURL='https://geo.infrasa.gov.br/server/rest/services/Hosted/FERROVIARIOS_INFRASA/FeatureServer/54/query';const dp=new URLSearchParams({where:"situacao LIKE 'Em Operação%'",outFields:'empreendim,trecho,situacao,sigla,concession,subconcess,bitola,participac,ext',returnGeometry:'true',outSR:'4326',geometryPrecision:'4',maxAllowableOffset:zoom<5?'0.03':'0.005',resultRecordCount:'2000',f:'geojson',geometry:`${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`,geometryType:'esriGeometryEnvelope',inSR:'4326',spatialRel:'esriSpatialRelIntersects'});const dr=await fetch(detailURL+'?'+dp);if(dr.ok){const dd=await dr.json();if(!dd.error){output.rail_detail=dd.features||[];total+=renderGeoFeatures('raildetail',output.rail_detail)}}
     }
-    cache.set(cacheKey,national);
    }
-  }
-  if(local.length&&(zoom>=6||local.every(t=>t==='locks'))){
-   const key=local.every(t=>t==='locks')?'locks:national':local.slice().sort().join(',')+':'+b.toBBoxString().split(',').map(v=>Number(v).toFixed(2)).join(',');
-   const cached=cache.get(key);
-   if(cached){Object.entries(cached).forEach(([t,els])=>{if(t==='locks')renderNational('locks',els);else render(t,els);total+=els.length})}
-   else{
-    const output={};
-    for(const type of local){
-     const response= type==='locks' ? await fetch('https://geo.infrasa.gov.br/server/rest/services/Eclusas/FeatureServer/0/query?'+new URLSearchParams({where:'1=1',outFields:'ideclusa,nome,com_metros,lar_metros,situacao,qua_clusas,nome_rio,nome_1,fonte',returnGeometry:'true',outSR:'4326',f:'geojson',resultRecordCount:'2000'})) : await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(queryFor(type,b))});
-     if(!response.ok)throw new Error('A fonte de dados respondeu com erro ('+response.status+').');
-     const data=await response.json();if(data.error)throw new Error(data.error.message||'Erro retornado pela fonte geográfica.');output[type]=type==='locks'?(data.features||[]):(data.elements||[]);total+=output[type].length;if(type==='locks')renderNational('locks',output[type]);else render(type,output[type])
+   for(const type of special){
+    if(type==='railregion'||type==='railinactive'){
+     const countryFilter=type==='railinactive'?"ZPP IN ('ARG','BOL','COL','GUY','GUF','PRY','PER','SUR','URY','VEN','BRA') AND OPS IN ('No operativa','No Operativa')":"ZPP IN ('ARG','BOL','COL','GUY','GUF','PRY','PER','SUR','URY','VEN')";const bboxFilter=`BBOX(the_geom,${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()},'EPSG:4326')`;const u=new URL('https://geovisor.observatorio-infraestructura-as.org/geoserver/ows');u.search=new URLSearchParams({service:'WFS',version:'2.0.0',request:'GetFeature',typeNames:'Observatorio:red_de_ferrocarril',outputFormat:'application/json',srsName:'EPSG:4326',count:'10000',CQL_FILTER:bboxFilter+' AND '+countryFilter}).toString();const r=await fetch(u);if(!r.ok)throw new Error('A fonte regional ferroviária respondeu com erro ('+r.status+').');const d=await r.json();if(d.exception||d.error)throw new Error('A fonte regional ferroviária não retornou dados válidos.');output[type]=d.features||[];total+=renderGeoFeatures(type,output[type]);
+    }else{
+     const where=type==='railworks'?"situacao LIKE 'Em Obras%'":"situacao = 'Em Planejamento'";const url='https://geo.infrasa.gov.br/server/rest/services/Hosted/FERROVIARIOS_INFRASA/FeatureServer/54/query';const params=new URLSearchParams({where,outFields:'empreendim,trecho,situacao,sigla,concession,subconcess,bitola,participac,ext',returnGeometry:'true',outSR:'4326',geometryPrecision:'4',maxAllowableOffset:zoom<5?'0.02':'0.004',resultRecordCount:'2000',f:'geojson',geometry:bbox,geometryType:'esriGeometryEnvelope',inSR:'4326',spatialRel:'esriSpatialRelIntersects'});const r=await fetch(url+'?'+params);if(!r.ok)throw new Error('A fonte oficial de obras ferroviárias respondeu com erro ('+r.status+').');const d=await r.json();if(d.error)throw new Error(d.error.message||'Erro na camada de projetos ferroviários.');output[type]=d.features||[];total+=renderGeoFeatures(type,output[type]);
     }
-    cache.set(key,output);
    }
+   if(local.length&&zoom>=6){for(const type of local){const r=type==='locks'?await fetch('https://geo.infrasa.gov.br/server/rest/services/Eclusas/FeatureServer/0/query?'+new URLSearchParams({where:'1=1',outFields:'ideclusa,nome,com_metros,lar_metros,situacao,qua_clusas,nome_rio,nome_1,fonte',returnGeometry:'true',outSR:'4326',f:'geojson',resultRecordCount:'2000'})):await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(queryFor(type,b))});if(!r.ok)throw new Error('A fonte de dados respondeu com erro ('+r.status+').');const d=await r.json();if(d.error)throw new Error(d.error.message||'Erro retornado pela fonte geográfica.');output[type]=type==='locks'?(d.features||[]):(d.elements||[]);total+=output[type].length;if(type==='locks')renderNational(type,output[type]);else render(type,output[type])}}
+   cache.set(cacheKey,output);
   }
-  let note=total+' feição(ões) exibidas. Hidrovias são coloridas por classe/restrições; clique nas linhas e eclusas para consultar atributos.';
-  if(local.some(t=>t!=='locks')&&zoom<6)note+=' Aproxime o mapa para ver os demais modais.';
-  if(!total)note='Nenhuma feição encontrada para os modais selecionados nesta área.';
-  say(note);
+  let note=total+' feição(ões) exibidas. Clique em linhas para consultar situação, bitola e atributos publicados pela fonte.';if(local.length&&zoom<6)note+=' Aproxime para consultar os demais modais.';if(!total)note='Nenhuma feição encontrada nesta área para os filtros selecionados.';say(note);
  }catch(e){say('Não foi possível concluir a consulta. '+escapeHtml(e.message)+' Tente novamente em instantes.')}
 }
 document.getElementById('load').addEventListener('click',load);
