@@ -100,7 +100,8 @@ function queryFor(type,b){
  if(type==='ports')return '[out:json][timeout:35];(nwr["harbour"]('+box+');nwr["industrial"="port"]('+box+');nwr["landuse"="port"]('+box+');nwr["seamark:type"="harbour"]('+box+'););out center tags;';
  return '[out:json][timeout:35];(nwr["aeroway"="aerodrome"]('+box+'););out center tags;'
 }
-function classifyWaterway(p){const c=String(p.cla_icacao||'').trim();const n=String(p.navegacao||'').trim();const o=String(p.observacao||'').toLowerCase();if(/potencial|propost|planejad/.test(c+' '+n))return 'Potencial ou proposta';if(/barragem|eclus|pedral|restri|estiag|sazon|gargalo|obst/.test(o))return 'Navegável com restrição registrada';if(/economicamente naveg|navegável|navegavel/.test(c+' '+n))return 'Navegável segundo a base oficial';return c||n||'Classificação não informada';}\nfunction renderNational(type,features){
+function classifyWaterway(p){const c=String(p.cla_icacao||'').trim();const n=String(p.navegacao||'').trim();const o=String(p.observacao||'').toLowerCase();if(/potencial|propost|planejad/.test(c+' '+n))return 'Potencial ou proposta';if(/barragem|eclus|pedral|restri|estiag|sazon|gargalo|obst/.test(o))return 'Navegável com restrição registrada';if(/economicamente naveg|navegável|navegavel/.test(c+' '+n))return 'Navegável segundo a base oficial';return c||n||'Classificação não informada';}
+function renderNational(type,features){
  const layer=L.layerGroup(),color=colors[type];
  features.forEach(feature=>{
   const props=feature.properties||{}, geometry=feature.geometry;
@@ -112,7 +113,9 @@ function classifyWaterway(p){const c=String(p.cla_icacao||'').trim();const n=Str
   paths.forEach(path=>{
    if(!path||path.length<2)return;
    const points=path.map(p=>[p[1],p[0]]),coords=points[Math.floor(points.length/2)];
-   if(type==='locks'){const p=feature.properties||{},coords=[feature.geometry.coordinates[1],feature.geometry.coordinates[0]],icon=L.divIcon({className:'',html:'<div class="atlas-marker" style="background:#d28b22">⇵</div>',iconSize:[30,30],iconAnchor:[15,15]});const m=L.marker(coords,{icon}).addTo(layer);const tags={...p};tags.name=p.nome||'Eclusa';m.bindTooltip(escapeHtml(tags.name),{direction:'top'});m.on('click',()=>showModal('locks',tags.name,tags,coords));return;}\n   if(type==='locks'){const icon=L.divIcon({className:'',html:'<div class="atlas-marker" style="background:#d28b22">⇵</div>',iconSize:[30,30],iconAnchor:[15,15]});const m=L.marker(coords,{icon}).addTo(layer);const tags={...props,name:props.nome||'Eclusa'};m.bindTooltip(escapeHtml(tags.name),{direction:'top'});m.on('click',()=>showModal('locks',tags.name,tags,coords));return;}\n   const style=type==='rail'?{color:'#7653a5',weight:zoomForStroke(),opacity:.96,dashArray:'10 4',lineCap:'butt'}:{color:waterColor(props),weight:zoomForStroke()+1,opacity:.94,lineCap:'round',lineJoin:'round'};
+   if(type==='locks'){const p=feature.properties||{},coords=[feature.geometry.coordinates[1],feature.geometry.coordinates[0]],icon=L.divIcon({className:'',html:'<div class="atlas-marker" style="background:#d28b22">⇵</div>',iconSize:[30,30],iconAnchor:[15,15]});const m=L.marker(coords,{icon}).addTo(layer);const tags={...p};tags.name=p.nome||'Eclusa';m.bindTooltip(escapeHtml(tags.name),{direction:'top'});m.on('click',()=>showModal('locks',tags.name,tags,coords));return;}
+   if(type==='locks'){const icon=L.divIcon({className:'',html:'<div class="atlas-marker" style="background:#d28b22">⇵</div>',iconSize:[30,30],iconAnchor:[15,15]});const m=L.marker(coords,{icon}).addTo(layer);const tags={...props,name:props.nome||'Eclusa'};m.bindTooltip(escapeHtml(tags.name),{direction:'top'});m.on('click',()=>showModal('locks',tags.name,tags,coords));return;}
+   const style=type==='rail'?{color:'#7653a5',weight:zoomForStroke(),opacity:.96,dashArray:'10 4',lineCap:'butt'}:{color:waterColor(props),weight:zoomForStroke()+1,opacity:.94,lineCap:'round',lineJoin:'round'};
    const line=L.polyline(points,style).addTo(layer);
    line.bindTooltip(escapeHtml(tags.name),{sticky:true,direction:'top'});
    line.on('click',()=>showModal(type,tags.name,tags,coords));
@@ -120,7 +123,8 @@ function classifyWaterway(p){const c=String(p.cla_icacao||'').trim();const n=Str
  });
  layer.addTo(map);groups[type]=layer;
 }
-function waterColor(p){const c=classifyWaterway(p);return /restrição/.test(c)?'#d17c30':/Potencial/.test(c)?'#7a8c95':'#087fc0'}\nfunction zoomForStroke(){return map.getZoom()<5?3.5:4}
+function waterColor(p){const c=classifyWaterway(p);return /restrição/.test(c)?'#d17c30':/Potencial/.test(c)?'#7a8c95':'#087fc0'}
+function zoomForStroke(){return map.getZoom()<5?3.5:4}
 function render(type,els){
  const layer=L.layerGroup();
  els.forEach(el=>{
