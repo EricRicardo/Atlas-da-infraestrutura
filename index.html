@@ -58,7 +58,7 @@ button{font:inherit;cursor:pointer}
 <label class="layer" style="--c:#cf5b2e"><span class="icon">↗</span><span><strong>Rodoviário</strong><small>vias principais</small></span><input type="checkbox" value="roads" style="margin-left:auto"></label>
 <label class="layer" style="--c:#7653a5"><span class="icon">╫</span><span><strong>Ferroviário</strong><small>rede em operação · nacional</small></span><input type="checkbox" value="rail" style="margin-left:auto"></label>
 <label class="layer" style="--c:#1688cc"><span class="icon">≈</span><span><strong>Hidroviário</strong><small>vias navegáveis · América do Sul</small></span><input type="checkbox" value="water" style="margin-left:auto"></label>
-<label class="layer" style="--c:#6b5b95"><span class="icon">⇄</span><span><strong>Ferrovias vizinhas</strong><small>redes regionais · países limítrofes</small></span><input type="checkbox" value="railregion" style="margin-left:auto"></label>
+<label class="layer" style="--c:#6b5b95"><span class="icon">⇄</span><span><strong>Ferrovias vizinhas</strong><small>marque e busque · azul: em operação</small></span><input type="checkbox" value="railregion" style="margin-left:auto"></label>
 <label class="layer" style="--c:#ba7040"><span class="icon">⚠</span><span><strong>Sem operação</strong><small>status regional · possível reavaliação</small></span><input type="checkbox" value="railinactive" style="margin-left:auto"></label>
 <label class="layer" style="--c:#e37b31"><span class="icon">⚒</span><span><strong>Em construção</strong><small>obras ferroviárias no Brasil</small></span><input type="checkbox" value="railworks" style="margin-left:auto"></label>
 <label class="layer" style="--c:#5489a0"><span class="icon">⌁</span><span><strong>Em planejamento</strong><small>projetos ferroviários no Brasil</small></span><input type="checkbox" value="railplan" style="margin-left:auto"></label>
@@ -162,7 +162,7 @@ async function load(){
  const special=requested.filter(t=>['railregion','railinactive','railworks','railplan'].includes(t));
  const local=requested.filter(t=>!overview.includes(t)&&!special.includes(t));
  if(!requested.length){say('Marque pelo menos um modal para consultar.');return}
- clearLayers();const b=map.getBounds(),parts=[];
+ clearLayers();regionalSummary='';const b=map.getBounds(),parts=[];
  if(overview.includes('rail'))parts.push('ferrovias nacionais');if(overview.includes('water'))parts.push('hidrovias sul-americanas');
  if(special.length)parts.push('camadas ferroviárias complementares');if(local.length&&zoom>=6)parts.push('detalhes locais');if(local.length&&zoom<6)parts.push('outros modais ao aproximar');
  say('<span class="loading"></span>Carregando '+parts.join(' e ')+'…');
